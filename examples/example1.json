@@ -1,0 +1,37 @@
+{
+    "_GIFWriter": {
+        "filename": "output/example1/gif/Mandelbrot.gif",
+        "delay": 1,
+        "startPoolSize": 32,
+        "maxPoolSize": 128
+    },
+    "PNGWriter": {
+        "outputPath": "output/example1/png",
+        "startPoolSize": 32,
+        "maxPoolSize": 128,
+        "numThreads": 4
+    },
+    "mandelbrot": {
+        "resX": 512,
+        "resY": 384,
+        "smooth": 1,
+        "maxIters": 1000
+    },
+    "zoom": {
+        "device": "gpu",
+        "center": {
+            "x": -0.7746806106269039, 
+            "y": -0.1374168856037867
+        },
+        "baseViewport": {
+            "x1": -2.2,
+            "x2": 1.0,
+            "y1": -1.2,
+            "y2": 1.2
+        },
+        "scaleStep": 0.95,
+        "minScale": 1e-13,
+        "numThreads": 4
+    }
+}
+
