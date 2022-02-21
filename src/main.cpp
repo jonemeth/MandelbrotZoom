@@ -8,7 +8,7 @@
 #include <memory>
 
 static std::string trimJSONString(std::string const& str) {
-  assert(str.front() == '"' && str.back == '"');
+  assert(str.front() == '"' && str.back() == '"');
   return str.substr(1, str.size() - 2);
 }
 
