@@ -4,7 +4,7 @@
 
 namespace mandelbrot {
 
-#define MAX_BLOCK_SIZE (16u)
+#define MAX_BLOCK_SIZE (32u)
 
 // Indexing shared memory
 #define shIx(a, b) ((b)*blockDim.x + (a))
@@ -107,23 +107,25 @@ __global__ void iterate_kernel(unsigned int gridSizeX, unsigned int gridSizeY,
 }
 
 void MandelbrotGPU::iterate(Viewport const &viewport) {
-  auto block_size = std::min(
-      MAX_BLOCK_SIZE,
-      static_cast<unsigned int>(std::sqrt(m_deviceProp.maxThreadsPerBlock)));
+  auto deviceMaxBlockSize =
+      static_cast<unsigned int>(std::sqrt(m_deviceProp.maxThreadsPerBlock));
+  
+  auto maxBlockSize = std::min(MAX_BLOCK_SIZE, deviceMaxBlockSize);
+  
+  unsigned int smooth =
+      std::min(maxBlockSize, static_cast<unsigned int>(m_cfg.smooth));
 
-  assert(m_cfg.smooth <= block_size);
-  assert(0 == (block_size % m_cfg.smooth));
+  auto blockSize = static_cast<unsigned int>(maxBlockSize / smooth) * smooth;
+  dim3 block_dim{blockSize, blockSize};
 
-  dim3 block_dim{block_size, block_size};
-
-  unsigned int gridSizeX = m_cfg.resX * m_cfg.smooth;
-  unsigned int gridSizeY = m_cfg.resY * m_cfg.smooth;
+  unsigned int gridSizeX = m_cfg.resX * smooth;
+  unsigned int gridSizeY = m_cfg.resY * smooth;
   dim3 grid_size{(gridSizeX + block_dim.x - 1) / block_dim.x,
                  (gridSizeY + block_dim.y - 1) / block_dim.y};
 
   size_t shared_size = block_dim.x * block_dim.y * sizeof(Mandelbrot::Real);
   iterate_kernel<<<grid_size, block_dim, shared_size>>>(
-      gridSizeX, gridSizeY, m_cfg.smooth, viewport.x1, viewport.x2, viewport.y1,
+      gridSizeX, gridSizeY, smooth, viewport.x1, viewport.x2, viewport.y1,
       viewport.y2, m_cfg.maxIters, m_results.gpu_data(), m_boiloutRadius);
 }
 
