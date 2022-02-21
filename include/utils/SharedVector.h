@@ -18,11 +18,12 @@
 template <typename T>
 class SharedVector {
  public:
-  SharedVector(size_t size) : m_size(size) { init(); }
+  SharedVector(size_t size) : m_size(size) {}
 
   SharedVector(std::vector<T> const& v) : m_size(v.size()) {
-    init();
+    m_cpu_data = new T[m_size];
     memcpy(m_cpu_data, v.data(), m_size * sizeof(T));
+    m_cpu_valid = true;
   }
 
   ~SharedVector() {
@@ -62,44 +63,46 @@ class SharedVector {
   }
 #endif
 
+
  private:
-  void init() {
+  /*void init() {
     m_cpu_valid = true;
     m_cpu_data = new T[m_size];
 #ifdef WITH_CUDA
     cudaMalloc(reinterpret_cast<void**>(&m_gpu_data), m_size * sizeof(T));
     m_gpu_valid = false;
 #endif
-  }
+  }*/
 
   void assure_cpu_valid() {
+    if (!m_cpu_data) m_cpu_data = new T[m_size];
 #ifdef WITH_CUDA
-    if (!m_cpu_valid) {
+    if (!m_cpu_valid && m_gpu_valid) {
       cudaMemcpy(m_cpu_data, m_gpu_data, m_size * sizeof(T),
                  cudaMemcpyDeviceToHost);
-      m_cpu_valid = true;
     }
-#else
-    assert(m_cpu_valid);
 #endif
+    m_cpu_valid = true;
   }
 
 #ifdef WITH_CUDA
   void assure_gpu_valid() {
-    if (!m_gpu_valid) {
+    if (!m_gpu_data)
+      cudaMalloc(reinterpret_cast<void**>(&m_gpu_data), m_size * sizeof(T));
+    if (!m_gpu_valid && m_cpu_valid) {
       cudaMemcpy(m_gpu_data, m_cpu_data, m_size * sizeof(T),
                  cudaMemcpyHostToDevice);
-      m_gpu_valid = true;
     }
+    m_gpu_valid = true;
   }
 #endif
 
  private:
   size_t m_size;
-  T* m_cpu_data;
-  bool m_cpu_valid;
+  T* m_cpu_data = nullptr;
+  bool m_cpu_valid = false;
 #ifdef WITH_CUDA
-  T* m_gpu_data;
-  bool m_gpu_valid;
+  T* m_gpu_data = nullptr;
+  bool m_gpu_valid = false;
 #endif
 };
