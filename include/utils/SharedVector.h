@@ -63,17 +63,7 @@ class SharedVector {
   }
 #endif
 
-
  private:
-  /*void init() {
-    m_cpu_valid = true;
-    m_cpu_data = new T[m_size];
-#ifdef WITH_CUDA
-    cudaMalloc(reinterpret_cast<void**>(&m_gpu_data), m_size * sizeof(T));
-    m_gpu_valid = false;
-#endif
-  }*/
-
   void assure_cpu_valid() {
     if (!m_cpu_data) m_cpu_data = new T[m_size];
 #ifdef WITH_CUDA
