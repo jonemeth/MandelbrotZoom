@@ -3,6 +3,7 @@
 #include <utils/GIFWriter.h>
 #include <utils/PNGWriter.h>
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -88,10 +89,26 @@ mandelbrot::MandelbrotZoom::Writers getWriters(json::jobject j) {
   return writers;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
   using namespace mandelbrot;
+  namespace fs = std::filesystem;
 
-  std::string inFile = "examples/example1.json";
+  if (argc != 2) {
+    std::cout << "Usage: Mandelbrot JSON" << std::endl;
+    return -1;
+  }
+
+  std::string inFile{argv[1]};
+
+  if (!fs::exists(inFile)) {
+    std::cout << "File " << inFile << " does not exist!" << std::endl;
+    return -1;
+  }
+
+  if (fs::is_directory(inFile)) {
+    std::cout << inFile << " is a directory!" << std::endl;
+    return -1;
+  }
 
   std::ifstream t(inFile);
   std::string str((std::istreambuf_iterator<char>(t)),
@@ -116,7 +133,7 @@ int main() {
   try {
     MandelbrotZoom zoom(zoomCfg, mandelbrotCfg, writers);
     zoom.run();
-    std::cout << "Zoom ready! Waiting for the image writer to finish!"
+    std::cout << "Zoom ready! Waiting for image writers to finish!"
               << std::endl;
 
   } catch (std::exception& e) {
